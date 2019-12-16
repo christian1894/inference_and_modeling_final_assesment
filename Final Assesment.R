@@ -68,6 +68,48 @@ mean(brexit_polls$x_hat)
 
 sd(brexit_polls$x_hat)
 
+#Consider the first poll in brexit_polls, a YouGov poll run on the 
+# same day as the Brexit referendum:
+
+first_poll = brexit_polls[1,]
+
+N = first_poll$samplesize
+x_hat = first_poll$x_hat
+
+se_hat_first_poll = sqrt(x_hat * (1  - x_hat)/ N)
+
+ci = x_hat + c(-qnorm(0.975), qnorm(0.975)) * se_hat_first_poll
+
+ci
+
+!between(0.5, x_hat - qnorm(.975)*se_hat_first_poll, x_hat + qnorm(.975)*se_hat_first_poll)    # predicts winner
+between(0.481, x_hat - qnorm(.975)*se_hat_first_poll, x_hat + qnorm(.975)*se_hat_first_poll)    # does not cover p
+
+# Create the data frame june_polls containing only Brexit polls
+# ending in June 2016 (enddate of "2016-06-01" and later). We will 
+# calculate confidence intervals for all polls and determine how many cover 
+# the true value of  𝑑 .
+
+
+june_polls = brexit_polls %>% filter(enddate >= "2016-06-01")
+
+# First, use mutate to calculate a plug-in estimate se_x_hat for the standard
+# error of the estimate  SE^[𝑋]  for each poll given its sample size
+# and value of  𝑋̂   (x_hat). 
+
+june_polls = june_polls %>% mutate(se_x_hat = sqrt(x_hat * (1 - x_hat) / samplesize))
+
+# Second, use mutate to calculate an estimate for the standard error
+# of the spread for each poll given the value of se_x_hat
+
+
+# Then, use mutate to calculate upper and lower bounds for
+# 95% confidence intervals of the spread. 
+
+
+# Last, add a column hit that indicates whether the confidence interval 
+# for each poll covers the correct spread  𝑑=−0.038 .
+
 
 
 
