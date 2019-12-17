@@ -97,21 +97,39 @@ june_polls = brexit_polls %>% filter(enddate >= "2016-06-01")
 # error of the estimate  SE^[𝑋]  for each poll given its sample size
 # and value of  𝑋̂   (x_hat). 
 
-june_polls = june_polls %>% mutate(se_x_hat = sqrt(x_hat * (1 - x_hat) / samplesize))
 
 # Second, use mutate to calculate an estimate for the standard error
 # of the spread for each poll given the value of se_x_hat
+
 
 
 # Then, use mutate to calculate upper and lower bounds for
 # 95% confidence intervals of the spread. 
 
 
+
 # Last, add a column hit that indicates whether the confidence interval 
 # for each poll covers the correct spread  𝑑=−0.038 .
 
+june_polls <- june_polls %>%
+  mutate(se_x_hat = sqrt(x_hat*(1-x_hat)/samplesize),
+         se_spread = 2*se_x_hat,
+         ci_lower_spread = spread - qnorm(0.975)*se_spread,
+         ci_upper_spread = spread + qnorm(0.975)*se_spread)
+
+# What proportion of polls have a confidence interval that covers the value 0?
+
+mean(june_polls$ci_lower_spread < 0 & june_polls$ci_upper_spread > 0)
+
+# What proportion of polls predict "Remain" (confidence interval entirely above 0)?
+
+mean(june_polls$ci_lower_spread > 0)
 
 
+# What proportion of polls have a confidence interval covering the true value of d?
+june_polls <- june_polls %>%
+  mutate(hit = (2*p-1 > ci_lower_spread) & (2*p-1 < ci_upper_spread))
+mean(june_polls$hit)
 
 
 
