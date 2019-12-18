@@ -138,7 +138,7 @@ mean(june_polls$hit)
 
 june_polls_group_by = june_polls %>% group_by(pollster) %>% summarize(hits_proportion = mean(hit), n = n())
 
-
+# Make a boxplot of the spread in june_polls by poll type.
 
 
 
