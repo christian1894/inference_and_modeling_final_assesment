@@ -2,6 +2,7 @@ library(tidyverse)
 options(digits = 3)
 library(dslabs)
 data(brexit_polls)
+library(ggplot2)
 
 p <- 0.481    # official proportion voting "Remain"
 d <- 2*p-1    # official spread
@@ -140,5 +141,7 @@ june_polls_group_by = june_polls %>% group_by(pollster) %>% summarize(hits_propo
 
 # Make a boxplot of the spread in june_polls by poll type.
 
+june_polls_group_by = june_polls %>% group_by(poll_type)
 
+ggplot(june_polls, aes(y = spread, color = poll_type)) + geom_boxplot() 
 
