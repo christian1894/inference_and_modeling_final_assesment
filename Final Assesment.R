@@ -145,3 +145,32 @@ june_polls_group_by = june_polls %>% group_by(poll_type)
 
 ggplot(june_polls, aes(y = spread, color = poll_type)) + geom_boxplot() 
 
+# Calculate the confidence intervals of the spread combined across all polls in 
+# june_polls, grouping by poll type. Recall that to determine the standard error of
+# the spread, you will need to double the standard error of the estimate.
+# 
+# Use this code (which determines the total sample size per poll type,
+# gives each spread estimate a weight based on the poll's sample size, and adds
+# an estimate of p from the combined spread) to begin your analysis:
+
+# combined_by_type <- june_polls %>%
+#   group_by(poll_type) %>%
+#   summarize(N = sum(samplesize),
+#             spread = sum(spread*samplesize)/N,
+#             p_hat = (spread + 1)/2)
+
+
+
+
+combined_by_type <- june_polls %>%
+  group_by(poll_type) %>%
+  summarize(N = sum(samplesize),
+            spread = sum(spread*samplesize)/N,
+            p_hat = (spread + 1)/2, 
+            se_spread = (sqrt(p_hat*(1-p_hat)/N)*2),
+            lower = spread - qnorm(0.975) * se_spread, 
+            upper = spread + qnorm(0.975) * se_spread) %>% 
+  filter(poll_type == "Online")
+
+
+
