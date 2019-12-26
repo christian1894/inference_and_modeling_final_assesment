@@ -159,9 +159,6 @@ ggplot(june_polls, aes(y = spread, color = poll_type)) + geom_boxplot()
 #             spread = sum(spread*samplesize)/N,
 #             p_hat = (spread + 1)/2)
 
-
-
-
 combined_by_type <- june_polls %>%
   group_by(poll_type) %>%
   summarize(N = sum(samplesize),
@@ -169,8 +166,84 @@ combined_by_type <- june_polls %>%
             p_hat = (spread + 1)/2, 
             se_spread = (sqrt(p_hat*(1-p_hat)/N)*2),
             lower = spread - qnorm(0.975) * se_spread, 
-            upper = spread + qnorm(0.975) * se_spread) %>% 
-  filter(poll_type == "Online")
+            upper = spread + qnorm(0.975) * se_spread)
+
+# Define brexit_hit, with the following code, which computes the confidence
+# intervals for all Brexit polls in 2016 and then calculates whether the confidence 
+# interval covers the actual value of the spread d=???0.038:
+brexit_hit <- brexit_polls %>%
+  mutate(p_hat = (spread + 1)/2,
+         se_spread = 2*sqrt(p_hat*(1-p_hat)/samplesize),
+         spread_lower = spread - qnorm(.975)*se_spread,
+         spread_upper = spread + qnorm(.975)*se_spread,
+         hit = spread_lower < -0.038 & spread_upper > -0.038) %>%
+  select(poll_type, hit)
+
+brexit_chisq <- table(brexit_hit$poll_type, brexit_hit$hit)
+chisq.test(brexit_chisq)$p.value
+
+# online > telephone
+hit_rate <- brexit_hit %>%
+  group_by(poll_type) %>%
+  summarize(avg = mean(hit))
+hit_rate$avg[hit_rate$poll_type == "Online"] > hit_rate$avg[hit_rate$poll_type == "Telephone"]
+
+# statistically significant
+chisq.test(brexit_chisq)$p.value < 0.05
+
+# Use the two-by-two table constructed in the previous exercise to calculate the odds
+# ratio between the hit rate of online and telephone polls to determine the magnitude of 
+# the difference in performance between the poll types.
+# Calculate the odds that an online poll generates a confidence interval that
+# covers the actual value of the spread.
+
+# from previous question
+brexit_chisq <- table(brexit_hit$poll_type, brexit_hit$hit)
+
+# convert to data frame
+chisq_df <- as.data.frame(brexit_chisq)
+
+online_true <- chisq_df$Freq[chisq_df$Var1 == "Online" & chisq_df$Var2 == "TRUE"]
+online_false <- chisq_df$Freq[chisq_df$Var1 == "Online" & chisq_df$Var2 == "FALSE"]
+
+online_odds <- online_true/online_false
+online_odds
+
+
+# Calculate the odds that a telephone poll generates a confidence interval
+# that covers the actual value of the spread.
+
+phone_true <- chisq_df$Freq[chisq_df$Var1 == "Telephone" & chisq_df$Var2 == "TRUE"]
+phone_false <- chisq_df$Freq[chisq_df$Var1 == "Telephone" & chisq_df$Var2 == "FALSE"]
+
+phone_odds <- phone_true/phone_false
+phone_odds
+
+# Calculate the odds ratio to determine how many times larger the odds are for online polls to hit versus telephone polls.  
+
+online_odds/phone_odds
+
+# Use brexit_polls to make a plot of the spread (spread) over time (enddate)
+# colored by poll type (poll_type). Use geom_smooth with method = "loess" to plot
+# smooth curves with a span of 0.4. Include the individual data points colored by
+# poll type. Add a horizontal line indicating the final value of d=???.038.
+
+brexit_polls %>%
+  ggplot(aes(enddate, spread, color = poll_type)) +
+  geom_smooth(method = "loess", span = 0.4) +
+  geom_point() +
+  geom_hline(aes(yintercept = -.038))
+
+# Use the following code to create the object brexit_long, which has a column 
+# vote containing the three possible votes on a Brexit poll ("remain", "leave", "undecided")
+# and a column proportion containing the raw proportion choosing that vote option on 
+# the given poll:
+
+brexit_long <- brexit_polls %>%
+  gather(vote, proportion, "remain":"undecided") %>%
+  mutate(vote = factor(vote))
+
+brexit_long %>% ggplot(aes(enddate, proportion, color = vote)) + geom_smooth(span = 0.3, method = "loess")
 
 
 
